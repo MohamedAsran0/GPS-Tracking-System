@@ -199,10 +199,17 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>1</ColumnNumber>
+<<<<<<< HEAD
+      <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>17</TopLine>
-      <CurrentLine>47</CurrentLine>
+      <TopLine>1</TopLine>
+      <CurrentLine>3</CurrentLine>
+=======
+      <ColumnNumber>40</ColumnNumber>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <TopLine>1</TopLine>
+      <CurrentLine>57</CurrentLine>
+>>>>>>> 119fe2823b6d549a9d45940f6b9a080ffcf9d796
       <bDave2>0</bDave2>
       <PathWithFileName>.\GPS Tracking System.c</PathWithFileName>
       <FilenameWithoutPath>GPS Tracking System.c</FilenameWithoutPath>

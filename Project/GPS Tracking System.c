@@ -12,6 +12,14 @@
 # define nine 0x6F
 
 
+
+double totaldis=0; //GlobalVariable for the total distance
+
+double latitude1 = 0;   // initial latitiude 
+double longitude1 = 0;   //initial longitude  
+
+
+
 void portF_init()
 {
 	SYSCTL_RCGCGPIO_R |= 0x20;
@@ -92,6 +100,18 @@ void digit(int digit)
 			  break;
 		}
 }
+
+//Function calculating the total route distance based on a function that will calculate the shortest
+// distance between two points that a team member will implement and it calls the function that turns the led on
+//when exceeding 100m that a team member will implement
+//Its inputs start from point 2,while the initial point is thrown to the global variables defined
+void totaldistance(double lat2, double lon2) {
+	totaldis += shortdistance(latitude1, longitude1, lat2, lon2);
+		latitude1 = lat2;
+		longitude1 = lon2;
+		ledon(totaldis);
+	}
+
 
 int main()
 {
