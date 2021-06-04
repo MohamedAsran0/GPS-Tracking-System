@@ -1,4 +1,6 @@
 #include "tm4c123gh6pm.h"
+#include <math.h>
+#define pi 3.14159265358979323846
 
 # define zero 0x3F
 # define one 0x06
@@ -99,6 +101,34 @@ void digit(int digit)
 				GPIO_PORTB_DATA_R = nine;
 			  break;
 		}
+}
+
+
+//Functions converting from degree to radian and vice versa
+double degtorad(double deg) {
+	return (deg * pi / 180);
+}
+double radtodeg(double rad) {
+	return (rad * 180 / pi);
+}
+
+
+//Function calculating the shortest distance between two points
+//Input parameters are in degree
+double shortdistance(double lat1, double lon1, double lat2, double lon2) {
+	double theta, dis;
+	if ((lat1 == lat2) && (lon1 == lon2)) {
+		return 0;
+	}
+	else {
+		theta = lon1 - lon2;
+		dis = sin(degtorad(lat1)) * sin(degtorad(lat2)) + cos(degtorad(lat1)) * cos(degtorad(lat2)) * cos(degtorad(theta));
+		dis = acos(dis);
+		dis = radtodeg(dis);
+		dis = dis * 60 * 1.1515;
+		dis = dis * 1.609344 * 1000;
+		return (dis); //distance between two points in meter
+	}
 }
 
 //Function calculating the total route distance based on a function that will calculate the shortest
