@@ -14,7 +14,7 @@
 # define nine 0x6F
 
 
-
+// incialization of port F
 void portF_init()
 {
 	SYSCTL_RCGCGPIO_R |= 0x20;
@@ -30,7 +30,7 @@ void portF_init()
 	
 	
 }
-
+// incialization of port A
 void portA_init()
 {
 	SYSCTL_RCGCGPIO_R |= 0x01;
@@ -45,7 +45,7 @@ void portA_init()
 	
 	
 }
-
+// incialization of port B
 void portB_init()
 {
 	SYSCTL_RCGCGPIO_R |= 0x02;
@@ -60,6 +60,7 @@ void portB_init()
 	
 	
 }
+// Digits intialization
 void digit(int digit)
 {
 		switch (digit){
