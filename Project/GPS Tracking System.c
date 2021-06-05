@@ -1,4 +1,19 @@
 #include "tm4c123gh6pm.h"
+#include <math.h>
+#define pi 3.14159265358979323846
+
+# define zero 0x3F
+# define one 0x06
+# define two 0x5B
+# define three 0x4F
+# define four 0x66
+# define five 0x6D
+# define six 0x7D
+# define seven 0x07
+# define eight 0x7F
+# define nine 0x6F
+
+
 
 void portF_init()
 {
@@ -45,6 +60,42 @@ void portB_init()
 	
 	
 }
+void digit(int digit)
+{
+		switch (digit){
+			case 0:
+				GPIO_PORTB_DATA_R = zero;
+			  break;
+			case 1:
+				GPIO_PORTB_DATA_R = one;
+			  break;
+			case 2:
+				GPIO_PORTB_DATA_R = two;
+			  break;
+			case 3:
+				GPIO_PORTB_DATA_R = three;
+			  break;
+			case 4:
+				GPIO_PORTB_DATA_R = four;
+			  break;
+			case 5:
+				GPIO_PORTB_DATA_R = five;
+			  break;
+			case 6:
+				GPIO_PORTB_DATA_R = six;
+			  break;
+			case 7:
+				GPIO_PORTB_DATA_R = seven;
+			  break;
+			case 8:
+				GPIO_PORTB_DATA_R = eight;
+			  break;
+			case 9:
+				GPIO_PORTB_DATA_R = nine;
+			  break;
+		}
+}
+
 
 // Delay for Seven Segmant Display
 int i;
@@ -74,6 +125,51 @@ void sevenSegment(int input)
 		delay();
 	}
 }
+
+
+double totaldis=0; //GlobalVariable for the total distance
+
+double latitude1 = 0;   // initial latitiude 
+double longitude1 = 0;   //initial longitude  
+
+
+//Functions converting from degree to radian and vice versa
+double degtorad(double deg) {
+	return (deg * pi / 180);
+}
+double radtodeg(double rad) {
+	return (rad * 180 / pi);
+}
+
+
+//Function calculating the shortest distance between two points
+//Input parameters are in degree
+double shortdistance(double lat1, double lon1, double lat2, double lon2) {
+	double theta, dis;
+	if ((lat1 == lat2) && (lon1 == lon2)) {
+		return 0;
+	}
+	else {
+		theta = lon1 - lon2;
+		dis = sin(degtorad(lat1)) * sin(degtorad(lat2)) + cos(degtorad(lat1)) * cos(degtorad(lat2)) * cos(degtorad(theta));
+		dis = acos(dis);
+		dis = radtodeg(dis);
+		dis = dis * 60 * 1.1515;
+		dis = dis * 1.609344 * 1000;
+		return (dis); //distance between two points in meter
+	}
+}
+
+//Function calculating the total route distance based on a function that will calculate the shortest
+// distance between two points that a team member will implement and it calls the function that turns the led on
+//when exceeding 100m that a team member will implement
+//Its inputs start from point 2,while the initial point is thrown to the global variables defined
+void totaldistance(double lat2, double lon2) {
+	totaldis += shortdistance(latitude1, longitude1, lat2, lon2);
+		latitude1 = lat2;
+		longitude1 = lon2;
+		ledon(totaldis);
+	}
 
 int main()
 {
