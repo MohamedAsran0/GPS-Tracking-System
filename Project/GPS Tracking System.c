@@ -1,6 +1,10 @@
 #include "tm4c123gh6pm.h"
-#include <math.h>
-#define pi 3.14159265358979323846
+#include "stdint.h"
+#include "stdio.h"
+#include "string.h"
+#include "stdlib.h"
+#include "stdbool.h"
+
 
 # define zero 0x3F
 # define one 0x06
@@ -12,6 +16,10 @@
 # define seven 0x07
 # define eight 0x7F
 # define nine 0x6F
+
+
+#include <math.h>
+#define pi 3.14159265358979323846
 
 
 // initalize_bluetooth_uart //bonus 
@@ -276,11 +284,81 @@ void totaldistance(double lat2, double lon2) {
 	}
 
 
-float arr[13][2];
+
+// Reading Data from GPS 
+ void readGps(){
+	int degrees = 0;
+	double minutes = 0.0;
+	double seconds = 0.0;
+	double tempLatitude;
+	double tempLongitude;
+  char array[12][20];
+	char *buf;
+  for(i=0;i<500;i++)
+	{
+		 buf[i] = UART2_receiver();
+	}	
+	
+        if(strstr(buf, "$GPRMC"))
+        {
+            int count = 0;
+            char *token;
+            token = strtok(buf, ",");
+            while(token != NULL)
+            {
+                strcpy(array[count], token);
+                token = strtok(NULL, ",");
+								count++;
+						}
+				}
+		
 
 
 
+							if(firstTime){
+										tempLatitude=atof(array[3]);
+										tempLongitude=atof(array[5]);
+	
+										degrees = tempLatitude / 100;
+										minutes = tempLatitude - (double)(degrees * 100);
+										seconds = minutes / 60.00;
+										latitude1 = degrees + seconds;
+										
+										degrees = tempLongitude / 100;
+										minutes = tempLongitude - (double)(degrees * 100);
+										seconds = minutes / 60.00;
+										longitude1 = degrees + seconds;
+										
+								
+									firstTime=false;
+								  delay_milli(100);
+								
+							}
+							else
+			        {
+									tempLatitude = atof(array[3]);
+									tempLongitude = atof(array[5]);
 
+									degrees = tempLatitude / 100;
+									minutes = tempLatitude - (double)(degrees * 100);
+									seconds = minutes / 60.00;
+									latitude2 = degrees + seconds;
+
+									degrees = tempLongitude / 100;
+									minutes = tempLongitude - (double)(degrees * 100);
+									seconds = minutes / 60.00;
+									longitude2 = degrees + seconds;
+								
+								totaldistance(latitude2,longitude2);
+								sevenSegment((int)totaldis);
+								delay_milli(100);
+							}
+						
+							
+	  }
+
+
+//float arr[13][2];
 
 int main()
 {
@@ -290,7 +368,7 @@ int main()
 
 	/********************** Test Code For distance Calculation *********************/
 
-	arr[0][0] = 30.0641830;
+	/*arr[0][0] = 30.0641830;
 	arr[0][1] = 31.2778710;
 
 	arr[1][0] = 30.0641320;
@@ -336,7 +414,7 @@ int main()
 	for(i=0;i<12;i++)
 	{
 		totaldistance(arr[i+1][0],arr[i+1][1]);
-	}
+	}*/
 
 	/*************************** Seven Segment Display *********************/
 
