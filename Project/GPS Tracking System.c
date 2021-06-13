@@ -1,6 +1,10 @@
 #include "tm4c123gh6pm.h"
-#include <math.h>
-#define pi 3.14159265358979323846
+#include "stdint.h"
+#include "stdio.h"
+#include "string.h"
+#include "stdlib.h"
+#include "stdbool.h"
+
 
 # define zero 0x3F
 # define one 0x06
@@ -14,14 +18,106 @@
 # define nine 0x6F
 
 
-
-double totaldis=0; //GlobalVariable for the total distance
-
-double latitude1 = 0;   // initial latitiude 
-double longitude1 = 0;   //initial longitude  
+#include <math.h>
+#define pi 3.14159265358979323846
 
 
+// initalize_bluetooth_uart //bonus 
+void UART_bluetooth_init() //UART2_INIT OF D6 "RX" & D7 "TX"
+{
+	SYSCTL_RCGCUART_R |= 0x80;                          // UART7 CLOCK
+	SYSCTL_RCGCGPIO_R |= 0x10;                          // portE CLOCK 
+	while((SYSCTL_PRGPIO_R & 0x10) == 0){};
+	UART7_CTL_R &= ~0x0001;                //DISABLE UART
+	UART7_IBRD_R = 104;                   // IBDR = INT(16MHZ / (16*9600)) 
+	UART7_FBRD_R = 11;   
+	UART7_LCRH_R = 0x0070;              // 8-BITS , NO PARITY , ONE STOP ,FIFO
+	UART7_CTL_R = 0x0301;           	// ENABLE TX , ENABLE RX & UART
+	     /// UART7 ====>   ~TX[E0],RX[E1]~ ///
+	GPIO_PORTE_AFSEL_R |= 0x03;  // ENABLE ALT. FUNCTION ON E0&E1
+    GPIO_PORTE_PCTL_R = (GPIO_PORTE_PCTL_R & 0xFFFFFF00)+0x00000011;   
+	GPIO_PORTE_DEN_R |= 0x03;     //DIGITAL ENABLE 
+	GPIO_PORTE_AMSEL_R &= ~0x03;   // NOT ANALOG
+}
+/////////////////////////////////////////////////////////////////////////////////////////////
 
+// bluetooth_reading_function
+char Bluetooth_data;
+char Bluetooth_Read(void)  
+{
+    while((UART7_FR_R & 0x0010) != 0);       // wait until Rx buffer is not full "check RXFE flag"  before giving it another byte 
+    Bluetooth_data= UART7_DR_R;     	      // take recived value in a variable    
+    return (Bluetooth_data & 0xFF);  //RETURN Bluetooth_Read
+}
+//////////////////////////////////////////////////////////////////////////////////////
+// bluetooth_writing_function
+void Bluetooth_Write ( char bluetooth_data)  
+{
+   while((UART7_FR_R & 0x0020) != 0); // wait until Tx buffer is not full "check TXFF flag"  before giving it another byte 
+    UART7_DR_R = bluetooth_data;                  //OUTPUT = VARIABLE
+}
+///////////////////////////////////////////////////////////////////////////////
+// bluetooth_writing_string_function
+void Bluetooth_Write_String(char *str)
+{
+  while(*str)
+	{
+		Bluetooth_Write(*(str++));
+	}
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void UART2_init() //UART2_INIT OF D6 "RX" & D7 "TX"
+{
+	SYSCTL_RCGCUART_R |= 0x04;
+	SYSCTL_RCGCGPIO_R |= 0x08;
+	while((SYSCTL_PRGPIO_R & 0x08) == 0);
+	UART2_CTL_R &= ~0x0001;
+	UART2_IBRD_R = 104;   // IBDR = INT(16,000,000 / (16*9600)) //104 
+	UART2_FBRD_R = 11;   //11  
+	UART2_LCRH_R = 0x0070;   // 8-BITS , NO PARITY , ONE STOP ,FIFO
+	UART2_CTL_R = 0x0201;   // DISABLE TX , ENABLE RX & UART
+	GPIO_PORTD_AFSEL_R |= 0x40;  // ENABLE ALT. FUNCTION ON D6
+	GPIO_PORTD_DEN_R |= 0x40;
+	GPIO_PORTD_AMSEL_R &= ~0x40;
+	GPIO_PORTD_PCTL_R &= ~0x01000000;
+	GPIO_PORTD_PCTL_R |= 0x01000000;
+
+}
+
+// Checking Reciever for UART2 
+char UART2_receiver()
+{
+    while((UART2_FR_R & 0x0010) != 0);    // WAIT UNTIL RXFE IS 0 
+    return(UART2_DR_R & 0xFF);
+
+}
+
+//intialization of UART0 
+void UART0_init(){
+    SYSCTL_RCGCUART_R |= SYSCTL_RCGCUART_R0;
+    SYSCTL_RCGCGPIO_R |= SYSCTL_RCGCGPIO_R0;
+
+    UART0_CTL_R &= ~UART_CTL_UARTEN;
+    UART0_IBRD_R = 104;
+    UART0_FBRD_R = 11;
+    UART0_LCRH_R = (UART_LCRH_WLEN_8 | UART_LCRH_FEN);
+    UART0_CTL_R |= (UART_CTL_RXE|UART_CTL_TXE|UART_CTL_UARTEN);
+
+    GPIO_PORTA_AFSEL_R |= 0x03;
+    GPIO_PORTA_PCTL_R = (GPIO_PORTA_PCTL_R &= ~0XFF) | (GPIO_PCTL_PA0_U0RX|GPIO_PCTL_PA1_U0TX);
+    GPIO_PORTA_AMSEL_R &= ~0x03;
+        GPIO_PORTA_DEN_R |= 0x03; 
+}
+
+//Writing Data on putty
+void Write_data(char data) {
+	while ((UART0_FR_R & UART_FR_TXFF) == UART_FR_TXFF);
+	UART0_DR_R = ((char)data);
+}
+
+// incialization of port F
 void portF_init()
 {
 	SYSCTL_RCGCGPIO_R |= 0x20;
@@ -37,7 +133,7 @@ void portF_init()
 	
 	
 }
-
+// incialization of port A
 void portA_init()
 {
 	SYSCTL_RCGCGPIO_R |= 0x01;
@@ -52,7 +148,7 @@ void portA_init()
 	
 	
 }
-
+// incialization of port B
 void portB_init()
 {
 	SYSCTL_RCGCGPIO_R |= 0x02;
@@ -67,6 +163,7 @@ void portB_init()
 	
 	
 }
+// Digits intialization
 void digit(int digit)
 {
 		switch (digit){
@@ -103,6 +200,50 @@ void digit(int digit)
 		}
 }
 
+
+// Delay for Seven Segmant Display
+int i;
+void delay()
+{
+	for(i=0;i<300;i++);
+}
+
+
+// Seven Segmant Display Function
+int number;
+void sevenSegment(int input)
+{
+	for(i=0; i<1000;i++)
+	{
+		GPIO_PORTA_DATA_R = 0x60;
+		number = input % 10;
+		digit(number);
+		delay();
+		GPIO_PORTA_DATA_R = 0x50;
+		number = (input / 10) % 10;
+		digit(number);
+		delay();
+		GPIO_PORTA_DATA_R = 0x30;
+		number = (input / 100) % 10;
+		digit(number);
+		delay();
+	}
+}
+
+
+double totaldis=0; //GlobalVariable for the total distance
+
+double latitude1 = 0;   // initial latitiude 
+double longitude1 = 0;   //initial longitude  
+
+double lat2;
+double lon2;
+
+//Function turning on the red LED on exceeding 100m
+void ledon(double totaldistance) {
+	if (totaldistance > 100)
+		GPIO_PORTF_DATA_R |= 0x02;
+}
 
 //Functions converting from degree to radian and vice versa
 double degtorad(double deg) {
@@ -143,10 +284,155 @@ void totaldistance(double lat2, double lon2) {
 	}
 
 
+
+// Reading Data from GPS 
+ void readGps(){
+	int degrees = 0;
+	double minutes = 0.0;
+	double seconds = 0.0;
+	double tempLatitude;
+	double tempLongitude;
+  char array[12][20];
+	char *buf;
+  for(i=0;i<500;i++)
+	{
+		 buf[i] = UART2_receiver();
+	}	
+	
+        if(strstr(buf, "$GPRMC"))
+        {
+            int count = 0;
+            char *token;
+            token = strtok(buf, ",");
+            while(token != NULL)
+            {
+                strcpy(array[count], token);
+                token = strtok(NULL, ",");
+								count++;
+						}
+				}
+		
+
+
+
+							if(firstTime){
+										tempLatitude=atof(array[3]);
+										tempLongitude=atof(array[5]);
+	
+										degrees = tempLatitude / 100;
+										minutes = tempLatitude - (double)(degrees * 100);
+										seconds = minutes / 60.00;
+										latitude1 = degrees + seconds;
+										
+										degrees = tempLongitude / 100;
+										minutes = tempLongitude - (double)(degrees * 100);
+										seconds = minutes / 60.00;
+										longitude1 = degrees + seconds;
+										
+								
+									firstTime=false;
+								  delay_milli(100);
+								
+							}
+							else
+			        {
+									tempLatitude = atof(array[3]);
+									tempLongitude = atof(array[5]);
+
+									degrees = tempLatitude / 100;
+									minutes = tempLatitude - (double)(degrees * 100);
+									seconds = minutes / 60.00;
+									latitude2 = degrees + seconds;
+
+									degrees = tempLongitude / 100;
+									minutes = tempLongitude - (double)(degrees * 100);
+									seconds = minutes / 60.00;
+									longitude2 = degrees + seconds;
+								
+								totaldistance(latitude2,longitude2);
+								sevenSegment((int)totaldis);
+								delay_milli(100);
+							}
+						
+							
+	  }
+
+
+//float arr[13][2];
+
+char x ;
+
 int main()
 {
-	portF_init();
-	portA_init();
-	portB_init();
+    portF_init();
+    portA_init();
+    portB_init();
+    UART2_init();
+    UART0_init();
+
+
+    while (1)
+    {
+
+            x = UART2_receiver();
+            Write_data(x);
+						//readGps(); 
+        }
+
+}
+
+	/********************** Test Code For distance Calculation *********************/
+
+	/*arr[0][0] = 30.0641830;
+	arr[0][1] = 31.2778710;
+
+	arr[1][0] = 30.0641320;
+	arr[1][1] = 31.2778920;
+
+	arr[2][0] = 30.0641030;
+	arr[2][1] = 31.2779130;
+
+	arr[3][0] = 30.0640770;
+	arr[3][1] = 31.2779140;
+
+	arr[4][0] = 30.0640540;
+	arr[4][1] = 31.2779240;
+
+	arr[5][0] = 30.0640380;
+	arr[5][1] = 31.2779230;
+
+	arr[6][0] = 30.0640330;
+	arr[6][1] = 31.2779460;
+
+	arr[7][0] = 30.0640420;
+	arr[7][1] = 31.2779650;
+
+	arr[8][0] = 30.0640570;
+	arr[8][1] = 31.2780050;
+
+	arr[9][0] = 30.0640750;
+	arr[9][1] = 31.2780490;
+
+	arr[10][0] = 30.0640850;
+	arr[10][1] = 31.2780870;
+
+	arr[11][0] = 30.0640840;
+	arr[11][1] = 31.2781390;
+
+	arr[12][0] = 30.0643120;
+	arr[12][1] = 31.2787740;
+
+
+	latitude1 = arr[0][0];
+	longitude1 = arr[0][1];
+
+	for(i=0;i<12;i++)
+	{
+		totaldistance(arr[i+1][0],arr[i+1][1]);
+	}*/
+
+	/*************************** Seven Segment Display *********************/
+
+	//sevenSegment(totaldis);
 
 }
