@@ -14,6 +14,25 @@
 # define nine 0x6F
 
 
+void UART2_init() //UART2_INIT OF D6 "RX" & D7 "TX"
+{
+	SYSCTL_RCGCUART_R |= 0x04;
+	SYSCTL_RCGCGPIO_R |= 0x08;
+	while((SYSCTL_PRGPIO_R & 0x08) == 0);
+	UART2_CTL_R &= ~0x0001;
+	UART2_IBRD_R = 104;   // IBDR = INT(16,000,000 / (16*9600)) //104 
+	UART2_FBRD_R = 11;   //11  
+	UART2_LCRH_R = 0x0070;   // 8-BITS , NO PARITY , ONE STOP ,FIFO
+	UART2_CTL_R = 0x0201;   // DISABLE TX , ENABLE RX & UART
+	GPIO_PORTD_AFSEL_R |= 0x40;  // ENABLE ALT. FUNCTION ON D6
+	GPIO_PORTD_DEN_R |= 0x40;
+	GPIO_PORTD_AMSEL_R &= ~0x40;
+	GPIO_PORTD_PCTL_R &= ~0x01000000;
+	GPIO_PORTD_PCTL_R |= 0x01000000;
+
+}
+
+
 // incialization of port F
 void portF_init()
 {
