@@ -236,8 +236,8 @@ double totaldis=0; //GlobalVariable for the total distance
 double latitude1 = 0;   // initial latitiude 
 double longitude1 = 0;   //initial longitude  
 
-double lat2;
-double lon2;
+double latitude2;
+double longitude2;
 
 //Function turning on the red LED on exceeding 100m
 void ledon(double totaldistance) {
@@ -285,7 +285,8 @@ void totaldistance(double lat2, double lon2) {
 
 
 
-// Reading Data from GPS 
+// Reading Data from GPS
+ bool firstTime = true;
  void readGps(){
 	int degrees = 0;
 	double minutes = 0.0;
@@ -331,7 +332,6 @@ void totaldistance(double lat2, double lon2) {
 										
 								
 									firstTime=false;
-								  delay_milli(100);
 								
 							}
 							else
@@ -351,7 +351,6 @@ void totaldistance(double lat2, double lon2) {
 								
 								totaldistance(latitude2,longitude2);
 								sevenSegment((int)totaldis);
-								delay_milli(100);
 							}
 						
 							
@@ -379,7 +378,7 @@ int main()
 						//readGps(); 
         }
 
-}
+
 
 	/********************** Test Code For distance Calculation *********************/
 
