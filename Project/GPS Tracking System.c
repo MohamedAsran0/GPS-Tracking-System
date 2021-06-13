@@ -14,6 +14,52 @@
 # define nine 0x6F
 
 
+// initalize_bluetooth_uart //bonus 
+void UART_bluetooth_init() //UART2_INIT OF D6 "RX" & D7 "TX"
+{
+	SYSCTL_RCGCUART_R |= 0x80;                          // UART7 CLOCK
+	SYSCTL_RCGCGPIO_R |= 0x10;                          // portE CLOCK 
+	while((SYSCTL_PRGPIO_R & 0x10) == 0){};
+	UART7_CTL_R &= ~0x0001;                //DISABLE UART
+	UART7_IBRD_R = 104;                   // IBDR = INT(16MHZ / (16*9600)) 
+	UART7_FBRD_R = 11;   
+	UART7_LCRH_R = 0x0070;              // 8-BITS , NO PARITY , ONE STOP ,FIFO
+	UART7_CTL_R = 0x0301;           	// ENABLE TX , ENABLE RX & UART
+	     /// UART7 ====>   ~TX[E0],RX[E1]~ ///
+	GPIO_PORTE_AFSEL_R |= 0x03;  // ENABLE ALT. FUNCTION ON E0&E1
+    GPIO_PORTE_PCTL_R = (GPIO_PORTE_PCTL_R & 0xFFFFFF00)+0x00000011;   
+	GPIO_PORTE_DEN_R |= 0x03;     //DIGITAL ENABLE 
+	GPIO_PORTE_AMSEL_R &= ~0x03;   // NOT ANALOG
+}
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+// bluetooth_reading_function
+char Bluetooth_data;
+char Bluetooth_Read(void)  
+{
+    while((UART7_FR_R & 0x0010) != 0);       // wait until Rx buffer is not full "check RXFE flag"  before giving it another byte 
+    Bluetooth_data= UART7_DR_R;     	      // take recived value in a variable    
+    return (Bluetooth_data & 0xFF);  //RETURN Bluetooth_Read
+}
+//////////////////////////////////////////////////////////////////////////////////////
+// bluetooth_writing_function
+void Bluetooth_Write ( char bluetooth_data)  
+{
+   while((UART7_FR_R & 0x0020) != 0); // wait until Tx buffer is not full "check TXFF flag"  before giving it another byte 
+    UART7_DR_R = bluetooth_data;                  //OUTPUT = VARIABLE
+}
+///////////////////////////////////////////////////////////////////////////////
+// bluetooth_writing_string_function
+void Bluetooth_Write_String(char *str)
+{
+  while(*str)
+	{
+		Bluetooth_Write(*(str++));
+	}
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 void UART2_init() //UART2_INIT OF D6 "RX" & D7 "TX"
 {
 	SYSCTL_RCGCUART_R |= 0x04;
